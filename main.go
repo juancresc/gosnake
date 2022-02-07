@@ -8,11 +8,6 @@ import (
 	"time"
 )
 
-type position struct {
-	x int
-	y int
-}
-
 const (
 	height int = 24
 	width  int = 35
@@ -24,6 +19,11 @@ const (
 	left  int = 97  // a
 	right int = 100 // d
 )
+
+type position struct {
+	x int
+	y int
+}
 
 type snake struct {
 	position  position
@@ -156,25 +156,27 @@ func main() {
 	keypress := make(chan int)
 	go keyPress(keypress)
 	tick := time.Tick(time.Duration(sspeed) * time.Millisecond)
+	oldDirection := initialDirection
+	newDirection := initialDirection
 	for {
 		select {
-		case <-tick:
-			select {
-			case keyCode := <-keypress:
-				if keyCode == 27 {
-					fmt.Println("Exit")
-					os.Exit(0)
-				}
-				mysnake.changeDirection(keyCode)
-				ticklogic(mysnake, comidita)
-			default:
-				// adjust frame rate
-				if mysnake.sspeed != current_speed {
-					tick = time.Tick(time.Duration(mysnake.sspeed) * time.Millisecond)
-					current_speed = mysnake.sspeed
-				}
-				ticklogic(mysnake, comidita)
+		case keyCode := <-keypress:
+			if keyCode == 27 {
+				fmt.Println("Exit")
+				os.Exit(0)
 			}
+			newDirection = keyCode
+		case <-tick:
+			// adjust frame rate
+			if mysnake.sspeed != current_speed {
+				tick = time.Tick(time.Duration(mysnake.sspeed) * time.Millisecond)
+				current_speed = mysnake.sspeed
+			}
+			if newDirection != oldDirection{
+				mysnake.changeDirection(newDirection)
+				oldDirection = newDirection
+			}
+			ticklogic(mysnake, comidita)
 		}
 	}
 }
